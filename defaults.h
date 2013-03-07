@@ -1,0 +1,6 @@
+#ifndef DEFAULTS_H
+#define DEFAULTS_H
+
+#define DEF_UPDATE_INTERVAL_MS 120000
+
+#endif // DEFAULTS_H
