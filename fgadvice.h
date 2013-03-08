@@ -12,6 +12,7 @@ class FGAdvice : public QObject
     Q_OBJECT
 public:
     enum State {
+        Error = -100,
         Initial = -1,
         Idle = 0,
         StartGetText = 1,
@@ -30,6 +31,22 @@ private:
     bool m_getAudio;
     State m_state;
 
+    struct _RespData {
+        QString text;
+        int id;
+        QString soundFile;
+        QString error;
+
+        void clear() {
+            text = QString();
+            id = 0;
+            soundFile = QString();
+            error = QString();
+        }
+    } m_respData;
+
+    void _interpretResponse();
+
 public:
     explicit FGAdvice(QObject *parent = 0);
 
@@ -39,12 +56,17 @@ public:
             int port,
             const QString& user = QString(),
             const QString& password = QString());
+
+    const QString& text() {
+        return m_respData.text;
+    }
     
 signals:
     void got(bool success);
 
 private slots:
     void onDataReady();
+    void onRequestFinished();
     
 public slots:
     
