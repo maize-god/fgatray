@@ -5,7 +5,6 @@
 
 #include <QCloseEvent>
 #include <QMenu>
-#include <QSystemTrayIcon>
 #include <QAction>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -16,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     _Create_TrayIcon();
     _LoadSettings();
+
+    m_canClose = false;
 }
 
 MainWindow::~MainWindow()
@@ -25,9 +26,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
-    // TODO CHANGE THIS BEHAVIOUR
-    delete m_trayIcon;
-    e->accept();
+    _SaveSettings();
+
+    if(m_canClose) {
+        delete m_trayIcon;
+        e->accept();
+    } else {
+        e->ignore();
+        hide();
+    }
 }
 
 void MainWindow::_Create_TrayIcon()
@@ -48,9 +55,12 @@ void MainWindow::_Create_TrayIcon()
             SLOT(onTogglePollServer(bool)));
     m_trayMenuPollServerToggleAction->setCheckable(true);
     m_trayMenu->addAction(tr("Change &Settings (Double Left Click)"), this,
-                          SLOT(show()));
-    m_trayMenu->addAction(tr("E&xit"), this, SLOT(close()));
+                          SLOT(onShow()));
+    m_trayMenu->addAction(tr("E&xit"), this, SLOT(onExit()));
     m_trayIcon->setContextMenu(m_trayMenu);
+
+    connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+            SLOT(onTrayActivate(QSystemTrayIcon::ActivationReason)));
 
     m_trayIcon->show();
 }
@@ -73,4 +83,36 @@ void MainWindow::onGetRandomAdviceWithSound()
 
 void MainWindow::onTogglePollServer(bool poll)
 {
+}
+
+void MainWindow::onTrayActivate(QSystemTrayIcon::ActivationReason reason)
+{
+    switch(reason) {
+    case QSystemTrayIcon::Trigger:
+        onGetRandomAdvice();
+        break;
+    case QSystemTrayIcon::MiddleClick:
+        onGetRandomAdviceWithSound();
+        break;
+    case QSystemTrayIcon::DoubleClick:
+        onShow();
+        break;
+    default:
+        break;
+    }
+}
+
+void MainWindow::onExit()
+{
+    m_canClose = true;
+    close();
+}
+
+void MainWindow::onShow()
+{
+    if(isVisible()) {
+        hide();
+    } else {
+        show();
+    }
 }

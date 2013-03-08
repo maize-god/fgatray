@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSystemTrayIcon>
 
-class QSystemTrayIcon;
 class QMenu;
 class QAction;
 
@@ -31,6 +31,7 @@ private:
 
     bool m_autoUpdate;
     int m_updateIntervalMillisec;
+    bool m_canClose;
 
     void _Create_TrayIcon();
     void _SaveSettings();
@@ -40,6 +41,9 @@ private slots:
     void onGetRandomAdvice();
     void onGetRandomAdviceWithSound();
     void onTogglePollServer(bool poll);
+    void onTrayActivate(QSystemTrayIcon::ActivationReason reason);
+    void onExit();
+    void onShow();
 };
 
 #endif // MAINWINDOW_H
