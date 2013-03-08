@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>
+#include <QMediaPlayer>
 
 #include "fgadvice.h"
 
@@ -31,6 +32,8 @@ private:
     QMenu* m_trayMenu;
     QAction* m_trayMenuPollServerToggleAction;
 
+    QMediaPlayer m_mediaPlayer;
+
     FGAdvice* m_fgAdvice;
 
     bool m_autoUpdate;
@@ -48,7 +51,7 @@ private slots:
     void onTrayActivate(QSystemTrayIcon::ActivationReason reason);
     void onExit();
     void onShow();
-    void onAdviceReceived(bool success);
+    void onAdviceReceived(int state);
 };
 
 #endif // MAINWINDOW_H

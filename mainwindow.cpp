@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     m_fgAdvice = new FGAdvice(this);
-    connect(m_fgAdvice, SIGNAL(got(bool)), SLOT(onAdviceReceived(bool)));
+    connect(m_fgAdvice, SIGNAL(got(int)), SLOT(onAdviceReceived(int)));
 
     _Create_TrayIcon();
     _LoadSettings();
@@ -83,6 +83,7 @@ void MainWindow::onGetRandomAdvice()
 
 void MainWindow::onGetRandomAdviceWithSound()
 {
+    m_fgAdvice->get(true);
 }
 
 void MainWindow::onTogglePollServer(bool poll)
@@ -121,13 +122,24 @@ void MainWindow::onShow()
     }
 }
 
-void MainWindow::onAdviceReceived(bool success)
+void MainWindow::onAdviceReceived(int state)
 {
-    if(success) {
+    switch(state) {
+    case FGAdvice::ReplySound:
+        if(m_mediaPlayer.state() == QMediaPlayer::StoppedState) {
+            m_mediaPlayer.setMedia(
+                        QMediaContent(
+                            QUrl::fromLocalFile(
+                                m_fgAdvice->soundFilePath())));
+            m_mediaPlayer.play();
+        }
+        // fall through
+    case FGAdvice::ReplyText:
         m_trayIcon->showMessage(
                     tr("Fuckin' Great Advice"), m_fgAdvice->text(),
                     QSystemTrayIcon::Information);
-    } else {
+        break;
+    case FGAdvice::ReplyError:
         m_trayIcon->showMessage(
                     tr("ERROR"), m_fgAdvice->errorText(),
                     QSystemTrayIcon::Critical);

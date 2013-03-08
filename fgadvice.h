@@ -2,8 +2,11 @@
 #define FGADVICE_H
 
 #include <QObject>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkRequest>
+#include <QDir>
+#include <QFile>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 class QNetworkReply;
 
@@ -21,15 +24,55 @@ public:
         GetSound = 4
     };
 
+    enum ReplyState {
+        ReplyError = 0,
+        ReplyText = 1,
+        ReplySound = 2
+    };
+
 private:
     QNetworkAccessManager* m_netAccMgr;
     QNetworkRequest m_netRequest;
-    QNetworkReply* m_activeReply;
-
-    QByteArray m_buffer;
 
     bool m_getAudio;
     State m_state;
+
+    QDir m_cacheDir;
+
+    struct _StateData {
+        QByteArray buffer;
+        QFile* cacheFile;
+        QNetworkReply* activeReply;
+
+        void clearCacheFile() {
+            if(cacheFile != 0) {
+                cacheFile->close();
+                cacheFile->deleteLater();
+                cacheFile = 0;
+            }
+        }
+
+        void clearActiveReply() {
+            if(activeReply != 0) {
+                activeReply->close();
+                activeReply->deleteLater();
+                activeReply = 0;
+            }
+        }
+
+        void clear() {
+            clearCacheFile();
+            clearActiveReply();
+            buffer.clear();
+        }
+
+        void restart(QNetworkReply* newReply) {
+            clear();
+            activeReply = newReply;
+        }
+
+        _StateData() : cacheFile(0), activeReply(0) {}
+    } m_stateData;
 
     struct _RespData {
         QString text;
@@ -42,6 +85,10 @@ private:
             id = 0;
             soundFile = QString();
             error = QString();
+        }
+
+        _RespData() {
+            clear();
         }
     } m_respData;
 
@@ -57,16 +104,23 @@ public:
             const QString& user = QString(),
             const QString& password = QString());
 
-    const QString& text() {
+    const QString& text() const {
         return m_respData.text;
     }
 
-    const QString& errorText() {
+    const QString& errorText() const {
         return m_respData.error;
+    }
+
+    QString soundFilePath() const {
+        if(m_respData.soundFile.isEmpty())
+            return QString();
+        else
+            return m_cacheDir.absoluteFilePath(m_respData.soundFile);
     }
     
 signals:
-    void got(bool success);
+    void got(int replyState);
 
 private slots:
     void onDataReady();

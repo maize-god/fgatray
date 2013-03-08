@@ -4,17 +4,21 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTextDocument>
+#include <QStandardPaths>
 #include "defaults.h"
 
 FGAdvice::FGAdvice(QObject *parent) :
     QObject(parent),
     m_netRequest(QUrl(FGA_URI)),
-    m_activeReply(0),
     m_getAudio(false),
     m_state(Initial)
 {
     m_netAccMgr = new QNetworkAccessManager(this);
     m_respData.clear();
+    m_cacheDir.setPath(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    if(!m_cacheDir.exists()) {
+        m_cacheDir.mkpath(m_cacheDir.absolutePath());
+    }
 }
 
 bool FGAdvice::get(bool withAudio)
@@ -24,13 +28,11 @@ bool FGAdvice::get(bool withAudio)
 
     m_getAudio = withAudio;
 
-    m_buffer.clear();
-
     m_state = GetText;
-    m_activeReply = m_netAccMgr->get(m_netRequest);
+    m_stateData.restart(m_netAccMgr->get(m_netRequest));
 
-    connect(m_activeReply, SIGNAL(readyRead()), SLOT(onDataReady()));
-    connect(m_activeReply, SIGNAL(finished()), SLOT(onRequestFinished()));
+    connect(m_stateData.activeReply, SIGNAL(readyRead()), SLOT(onDataReady()));
+    connect(m_stateData.activeReply, SIGNAL(finished()), SLOT(onRequestFinished()));
 
     return true;
 }
@@ -53,21 +55,39 @@ void FGAdvice::onDataReady()
 {
     switch(m_state) {
     case StartGetText:
-        m_buffer.reserve(m_activeReply->header(QNetworkRequest::ContentLengthHeader).toInt());
+        m_stateData.buffer.reserve(
+                    m_stateData.activeReply->header(
+                        QNetworkRequest::ContentLengthHeader).toInt());
         m_state = GetText;
         // break through
     case GetText:
     {
-        int i = m_buffer.size();
-        int sz = (int) m_activeReply->bytesAvailable();
-        m_buffer.resize(i + sz);
-        m_activeReply->read(m_buffer.data() + i, sz);
+        int i = m_stateData.buffer.size();
+        int sz = (int) m_stateData.activeReply->bytesAvailable();
+        m_stateData.buffer.resize(i + sz);
+        m_stateData.activeReply->read(m_stateData.buffer.data() + i, sz);
     }
-    case StartGetSound:
-        // TODO get sound
         break;
+    case StartGetSound:
+    {
+        QString fp = soundFilePath();
+        m_stateData.cacheFile = new QFile(fp);
+    }
+        if(!m_stateData.cacheFile->open(QIODevice::WriteOnly)) {
+            m_respData.error = m_stateData.cacheFile->errorString();
+            m_stateData.clear();
+            break;
+        } else {
+            m_state = GetSound;
+        }
     case GetSound:
-        // TODO get sound
+    {
+        int sz = (int) m_stateData.activeReply->bytesAvailable();
+        QByteArray d = m_stateData.activeReply->read(sz);
+        if(!d.isEmpty()) {
+            m_stateData.cacheFile->write(d);
+        }
+    }
         break;
     default:
         break;
@@ -79,35 +99,64 @@ void FGAdvice::onRequestFinished()
     switch(m_state) {
     case GetText:
     {
+        bool clearState = true;
         m_respData.clear();
         if(!m_getAudio) {
             m_state = Idle;
         }
 
-        if(m_activeReply->error() == QNetworkReply::NoError) {
+        if(m_stateData.activeReply->error() == QNetworkReply::NoError) {
             _interpretResponse();
         } else {
             m_state = Error;
-            m_respData.error = m_activeReply->errorString();
+            m_respData.error = m_stateData.activeReply->errorString();
         }
 
         if(m_state != GetText) {
-            emit got(m_state != Error);
+            emit got(m_state == Error ? ReplyError : ReplyText);
         } else {
-            m_state = StartGetSound;
-            // TODO get audio
+            QFile cfl(soundFilePath());
+            if(cfl.isReadable()) {
+                m_state = Idle;
+                emit got(ReplySound);
+            } else {
+                m_state = StartGetSound;
+                QString u = QString(FGA_SOUND_URI).arg(m_respData.soundFile);
+                QUrl url = QString(u);
+                QNetworkRequest nrAudio(url);
+                m_stateData.restart(m_netAccMgr->get(nrAudio));
+
+                connect(m_stateData.activeReply, SIGNAL(readyRead()), SLOT(onDataReady()));
+                connect(m_stateData.activeReply, SIGNAL(finished()), SLOT(onRequestFinished()));
+
+                clearState = false;
+            }
         }
 
-        m_activeReply->close();
-        m_activeReply->deleteLater();
-        m_activeReply = 0;
+        if(clearState)
+            m_stateData.clear();
     }
         break;
     case GetSound:
-        // TODO get audio finished
+    {
+        if(m_stateData.activeReply->error() != QNetworkReply::NoError) {
+            m_state = Error;
+            m_respData.error = m_stateData.activeReply->errorString();
+            emit got(ReplyError);
+        } else {
+            m_state = Idle;
+            emit got(ReplySound);
+        }
+
+        m_stateData.clear();
+    }
+        break;
+    case Error:
+        emit got(ReplyError);
         break;
     default:
-        // TODO something more sensible?
+        m_state = Error;
+        m_stateData.clear();
         break;
     }
 }
@@ -116,9 +165,9 @@ void FGAdvice::_interpretResponse()
 {
     m_respData.clear();
 
-    if(!m_buffer.isEmpty()) {
+    if(!m_stateData.buffer.isEmpty()) {
         QJsonParseError pe;
-        QJsonDocument doc = QJsonDocument::fromJson(m_buffer, &pe);
+        QJsonDocument doc = QJsonDocument::fromJson(m_stateData.buffer, &pe);
 
         if(doc.isObject()) {
             QJsonObject o = doc.object();
