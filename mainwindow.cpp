@@ -13,6 +13,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    m_fgAdvice = new FGAdvice(this);
+    connect(m_fgAdvice, SIGNAL(got(bool)), SLOT(onAdviceReceived(bool)));
+
     _Create_TrayIcon();
     _LoadSettings();
 
@@ -75,6 +78,7 @@ void MainWindow::_LoadSettings()
 
 void MainWindow::onGetRandomAdvice()
 {
+    m_fgAdvice->get();
 }
 
 void MainWindow::onGetRandomAdviceWithSound()
@@ -114,5 +118,18 @@ void MainWindow::onShow()
         hide();
     } else {
         show();
+    }
+}
+
+void MainWindow::onAdviceReceived(bool success)
+{
+    if(success) {
+        m_trayIcon->showMessage(
+                    tr("Fuckin' Great Advice"), m_fgAdvice->text(),
+                    QSystemTrayIcon::Information);
+    } else {
+        m_trayIcon->showMessage(
+                    tr("ERROR"), m_fgAdvice->errorText(),
+                    QSystemTrayIcon::Critical);
     }
 }

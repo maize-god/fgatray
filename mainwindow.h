@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 
+#include "fgadvice.h"
+
 class QMenu;
 class QAction;
 
@@ -29,6 +31,8 @@ private:
     QMenu* m_trayMenu;
     QAction* m_trayMenuPollServerToggleAction;
 
+    FGAdvice* m_fgAdvice;
+
     bool m_autoUpdate;
     int m_updateIntervalMillisec;
     bool m_canClose;
@@ -44,6 +48,7 @@ private slots:
     void onTrayActivate(QSystemTrayIcon::ActivationReason reason);
     void onExit();
     void onShow();
+    void onAdviceReceived(bool success);
 };
 
 #endif // MAINWINDOW_H

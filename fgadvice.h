@@ -60,6 +60,10 @@ public:
     const QString& text() {
         return m_respData.text;
     }
+
+    const QString& errorText() {
+        return m_respData.error;
+    }
     
 signals:
     void got(bool success);

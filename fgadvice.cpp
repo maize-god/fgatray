@@ -3,14 +3,18 @@
 #include <QtNetwork/QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTextDocument>
 #include "defaults.h"
 
 FGAdvice::FGAdvice(QObject *parent) :
-    QObject(parent), m_netRequest(QUrl(FGA_URI)),
-    m_getAudio(false), m_state(Initial),
-    m_activeReply(0)
+    QObject(parent),
+    m_netRequest(QUrl(FGA_URI)),
+    m_activeReply(0),
+    m_getAudio(false),
+    m_state(Initial)
 {
     m_netAccMgr = new QNetworkAccessManager(this);
+    m_respData.clear();
 }
 
 bool FGAdvice::get(bool withAudio)
@@ -19,6 +23,8 @@ bool FGAdvice::get(bool withAudio)
         return false;
 
     m_getAudio = withAudio;
+
+    m_buffer.clear();
 
     m_state = GetText;
     m_activeReply = m_netAccMgr->get(m_netRequest);
@@ -47,8 +53,7 @@ void FGAdvice::onDataReady()
 {
     switch(m_state) {
     case StartGetText:
-        m_buffer.resize(0);
-        m_buffer.reserve(m_activeReply->header(QNetworkRequest::ContentLengthHeader));
+        m_buffer.reserve(m_activeReply->header(QNetworkRequest::ContentLengthHeader).toInt());
         m_state = GetText;
         // break through
     case GetText:
@@ -87,15 +92,22 @@ void FGAdvice::onRequestFinished()
         }
 
         if(m_state != GetText) {
-            emit got(m_state == Error);
+            emit got(m_state != Error);
         } else {
             m_state = StartGetSound;
             // TODO get audio
         }
+
+        m_activeReply->close();
+        m_activeReply->deleteLater();
+        m_activeReply = 0;
     }
         break;
     case GetSound:
         // TODO get audio finished
+        break;
+    default:
+        // TODO something more sensible?
         break;
     }
 }
@@ -105,19 +117,36 @@ void FGAdvice::_interpretResponse()
     m_respData.clear();
 
     if(!m_buffer.isEmpty()) {
-        QJsonDocument doc = QJsonDocument::fromBinaryData(m_buffer);
+        QJsonParseError pe;
+        QJsonDocument doc = QJsonDocument::fromJson(m_buffer, &pe);
 
         if(doc.isObject()) {
             QJsonObject o = doc.object();
-            m_respData.id = (int) o.value("id").toDouble();
-            m_respData.text = o.value("text").toString();
+            {
+                QJsonValue _id = o.value("id");
+                if(_id.isDouble())
+                    m_respData.id = (int) _id.toDouble();
+                else if(_id.isString())
+                    m_respData.id = _id.toString().toInt();
+            }
+            {
+                QString _text = o.value("text").toString();
+                if(!_text.isEmpty()) {
+                    QTextDocument td;
+                    td.setHtml(_text);
+                    m_respData.text = td.toPlainText();
+                }
+            }
             m_respData.soundFile = o.value("sound").toString();
+        } else if(pe.error != QJsonParseError::NoError) {
+            m_respData.error = pe.errorString();
         }
     }
 
     if(m_respData.id == 0 || m_respData.text.isEmpty()) {
         m_state = Error;
-        m_respData.error = "Invalid response";
+        if(m_respData.error.isEmpty())
+            m_respData.error = "Invalid response";
     } else if(m_respData.soundFile.isEmpty()) {
         m_state = Idle;
     }
