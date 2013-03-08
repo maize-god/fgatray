@@ -2,8 +2,10 @@
 #define FGADVICE_H
 
 #include <QObject>
-#include <QtNetwork/QHttp>
-#include <QtNetwork/QHttpResponseHeader>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkRequest>
+
+class QNetworkReply;
 
 class FGAdvice : public QObject
 {
@@ -12,13 +14,17 @@ public:
     enum State {
         Initial = -1,
         Idle = 0,
-        GetText = 1,
-        GetSound = 2
+        StartGetText = 1,
+        GetText = 2,
+        StartGetSound = 3,
+        GetSound = 4
     };
 
 private:
-    QHttp m_http;
-    QHttpRequestHeader m_reqHeader;
+    QNetworkAccessManager* m_netAccMgr;
+    QNetworkRequest m_netRequest;
+    QNetworkReply* m_activeReply;
+
     QByteArray m_buffer;
 
     bool m_getAudio;
@@ -28,12 +34,17 @@ public:
     explicit FGAdvice(QObject *parent = 0);
 
     bool get(bool withAudio = false);
+    bool setProxy(
+            const QString& host,
+            int port,
+            const QString& user = QString(),
+            const QString& password = QString());
     
 signals:
     void got(bool success);
 
 private slots:
-    void onResponseHeader(const QHttpResponseHeader& resp);
+    void onDataReady();
     
 public slots:
     
