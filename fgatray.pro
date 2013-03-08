@@ -13,10 +13,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    fgadvice.cpp
 
 HEADERS  += mainwindow.h \
-    defaults.h
+    defaults.h \
+    fgadvice.h
 
 FORMS    += mainwindow.ui
 
