@@ -15,12 +15,14 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     fgadvice.cpp \
-    settings.cpp
+    settings.cpp \
+    foreign/simplecrypt.cpp
 
 HEADERS  += mainwindow.h \
     defaults.h \
     fgadvice.h \
-    settings.h
+    settings.h \
+    foreign/simplecrypt.h
 
 FORMS    += mainwindow.ui
 

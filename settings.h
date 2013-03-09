@@ -3,6 +3,8 @@
 
 #include <QSettings>
 
+class SimpleCrypt;
+
 class Settings
 {
 private:
@@ -12,6 +14,8 @@ private:
     static Settings* _instance;
 
     QSettings* m_settings;
+
+    SimpleCrypt* m_simpleCrypt;
 
 public:
     static Settings& instance() {
@@ -37,6 +41,9 @@ public:
     int getInt(const QString& key, int defValue = 0);
     bool getBool(const QString& key, bool defValue = false);
     QString getString(const QString& key, QString defValue = QString());
+
+    void setEncrypted(const QString& key, QString value);
+    QString getEncrypted(const QString& key, QString defValue = QString());
 
     void context(const QString& ctx = QString());
 };

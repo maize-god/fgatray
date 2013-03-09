@@ -121,7 +121,7 @@ void MainWindow::_SaveSettings()
     s.set("Host", ui->leProxyHost->text());
     s.set("Port", ui->leProxyPort->text());
     s.set("User", ui->leProxyUser->text());
-    s.set("Password", ui->leProxyPassword->text());
+    s.setEncrypted("Password", ui->leProxyPassword->text());
 
     s.context();
 }
@@ -155,7 +155,7 @@ void MainWindow::_LoadSettings()
         ui->leProxyHost->setText(s.getString("Host"));
         ui->leProxyPort->setText(s.getString("Port"));
         ui->leProxyUser->setText(s.getString("User"));
-        ui->leProxyPassword->setText(s.getString("Password"));
+        ui->leProxyPassword->setText(s.getEncrypted("Password"));
     }
 
     s.context();

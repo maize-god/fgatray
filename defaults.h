@@ -9,4 +9,6 @@
 #define FGA_ORGID "Quitters_Inc"
 #define FGA_APPID "FGATray"
 
+#define FGA_CRYPTO_KEY "FGATray_8192372149231"
+
 #endif // DEFAULTS_H
