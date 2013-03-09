@@ -16,21 +16,6 @@ Settings::~Settings()
     delete m_settings;
 }
 
-template <> inline int Settings::get<int>(const QString &key, int defValue)
-{
-    return m_settings->value(key, QVariant(defValue)).toInt();
-}
-
-template <> inline bool Settings::get<bool>(const QString &key, bool defValue)
-{
-    return m_settings->value(key, QVariant(defValue)).toBool();
-}
-
-template <> inline QString Settings::get<QString>(const QString &key, QString defValue)
-{
-    return m_settings->value(key, QVariant(defValue)).toString();
-}
-
 int Settings::getInt(const QString& key, int defValue) {
     return get<int>(key, defValue);
 }
