@@ -8,6 +8,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QTimer>
+#include <QAbstractButton>
 
 struct ENUM_PAIR {
     int id;
@@ -181,10 +182,17 @@ void MainWindow::_ApplySettings(bool startup)
         if(ui->cmbAutoUpdateInterval->currentIndex() >= 0)
             interval = ui->cmbAutoUpdateInterval->itemData(
                         ui->cmbAutoUpdateInterval->currentIndex()).toInt();
-        m_updateTimer->setInterval(1000 * interval);
-        m_updateTimer->start();
+        interval = 1000 * interval;
+        if(m_updateTimer->interval() != interval) {
+            m_updateTimer->stop();
+            m_updateTimer->setInterval(interval);
+        }
+
+        if(!m_updateTimer->isActive())
+            m_updateTimer->start();
     } else {
-        m_updateTimer->stop();
+        if(m_updateTimer->isActive())
+            m_updateTimer->stop();
     }
 }
 
@@ -273,4 +281,27 @@ void MainWindow::on_cbUseProxy_toggled(bool checked)
     ui->leProxyPort->setEnabled(checked);
     ui->leProxyUser->setEnabled(checked);
     ui->leProxyPassword->setEnabled(checked);
+}
+
+void MainWindow::on_buttonBox_clicked(QAbstractButton *button)
+{
+    QDialogButtonBox::StandardButton btnId =
+            ui->buttonBox->standardButton(button);
+
+    switch(btnId) {
+    case QDialogButtonBox::Close:
+        m_canClose = true;
+        close();
+        break;
+    case QDialogButtonBox::Save:
+        _SaveSettings();
+        _ApplySettings();
+        break;
+    case QDialogButtonBox::Reset:
+        _LoadSettings();
+        break;
+    default:
+        // shut the compiler up
+        break;
+    }
 }

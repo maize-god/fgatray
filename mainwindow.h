@@ -10,6 +10,7 @@
 class QMenu;
 class QAction;
 class QTimer;
+class QAbstractButton;
 
 namespace Ui {
 class MainWindow;
@@ -59,6 +60,7 @@ private slots:
     void onAdviceReceived(int state);
     void on_cbAutoUpdate_toggled(bool checked);
     void on_cbUseProxy_toggled(bool checked);
+    void on_buttonBox_clicked(QAbstractButton *button);
 };
 
 #endif // MAINWINDOW_H
