@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QTextDocument>
 #include <QStandardPaths>
+#include <QAuthenticator>
 #include "defaults.h"
 
 FGAdvice::FGAdvice(QObject *parent) :
@@ -14,6 +15,9 @@ FGAdvice::FGAdvice(QObject *parent) :
     m_state(Initial)
 {
     m_netAccMgr = new QNetworkAccessManager(this);
+    connect(m_netAccMgr, SIGNAL(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)),
+            SLOT(onProxyAuth(QNetworkProxy,QAuthenticator*)));
+
     m_respData.clear();
     m_cacheDir.setPath(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
     if(!m_cacheDir.exists()) {
@@ -43,6 +47,9 @@ bool FGAdvice::setProxy(
 {
     if(m_state > Idle)
         return false;
+
+    m_proxyCreds.user = user;
+    m_proxyCreds.password = password;
 
     QNetworkProxy proxy(
                 QNetworkProxy::HttpProxy, host, port, user, password);
@@ -161,6 +168,20 @@ void FGAdvice::onRequestFinished()
     }
 }
 
+void FGAdvice::onProxyAuth(const QNetworkProxy &proxy, QAuthenticator *authenticator)
+{
+    Q_UNUSED(proxy)
+    if(m_stateData.proxyTried) {
+        m_state = Error;
+        m_respData.error = tr("Proxy authentication failed");
+        m_stateData.clear();
+    } else {
+        authenticator->setUser(m_proxyCreds.user);
+        authenticator->setPassword(m_proxyCreds.password);
+        m_stateData.proxyTried = true;
+    }
+}
+
 void FGAdvice::_interpretResponse()
 {
     m_respData.clear();
@@ -195,7 +216,7 @@ void FGAdvice::_interpretResponse()
     if(m_respData.id == 0 || m_respData.text.isEmpty()) {
         m_state = Error;
         if(m_respData.error.isEmpty())
-            m_respData.error = "Invalid response";
+            m_respData.error = tr("Invalid response");
     } else if(m_respData.soundFile.isEmpty()) {
         m_state = Idle;
     }

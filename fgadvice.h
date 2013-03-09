@@ -43,6 +43,7 @@ private:
         QByteArray buffer;
         QFile* cacheFile;
         QNetworkReply* activeReply;
+        bool proxyTried;
 
         void clearCacheFile() {
             if(cacheFile != 0) {
@@ -64,6 +65,7 @@ private:
             clearCacheFile();
             clearActiveReply();
             buffer.clear();
+            proxyTried = false;
         }
 
         void restart(QNetworkReply* newReply) {
@@ -71,7 +73,7 @@ private:
             activeReply = newReply;
         }
 
-        _StateData() : cacheFile(0), activeReply(0) {}
+        _StateData() : cacheFile(0), activeReply(0), proxyTried(false) {}
     } m_stateData;
 
     struct _RespData {
@@ -91,6 +93,11 @@ private:
             clear();
         }
     } m_respData;
+
+    struct _ProxyCreds {
+        QString user;
+        QString password;
+    } m_poxyCreds;
 
     void _interpretResponse();
 
@@ -125,6 +132,7 @@ signals:
 private slots:
     void onDataReady();
     void onRequestFinished();
+    void onProxyAuth(const QNetworkProxy &proxy, QAuthenticator *authenticator);
     
 public slots:
     

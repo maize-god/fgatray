@@ -6,150 +6,120 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>475</width>
+    <height>377</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QGroupBox" name="groupBox">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>20</y>
-      <width>361</width>
-      <height>171</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Proxy Settings</string>
-    </property>
-    <widget class="QLineEdit" name="leProxyHost">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>40</y>
-       <width>113</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="placeholderText">
-      <string>Host name or IP</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>40</y>
-       <width>91</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Proxy Host</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_2">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>70</y>
-       <width>91</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Proxy Port</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="leProxyPort">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>70</y>
-       <width>113</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="inputMask">
-      <string notr="true">00009</string>
-     </property>
-     <property name="placeholderText">
-      <string>Usually 3128</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="leProxyUser">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>100</y>
-       <width>113</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="placeholderText">
-      <string>Leave blank for anonymous access</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_3">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>100</y>
-       <width>91</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Proxy User</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="leProxyPassword">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>130</y>
-       <width>113</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="echoMode">
-      <enum>QLineEdit::Password</enum>
-     </property>
-     <property name="placeholderText">
-      <string/>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_4">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>130</y>
-       <width>91</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Proxy Password</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QDialogButtonBox" name="buttonBox">
-    <property name="geometry">
-     <rect>
-      <x>160</x>
-      <y>260</y>
-      <width>166</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="standardButtons">
-     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-    </property>
-   </widget>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="title">
+       <string>General Settings</string>
+      </property>
+      <layout class="QFormLayout" name="formLayout_2">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="cbAutoUpdate">
+         <property name="text">
+          <string>Auto Update</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="cmbAutoUpdateInterval"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>Proxy Settings</string>
+      </property>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="cbUseProxy">
+         <property name="text">
+          <string>Use Proxy</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Proxy Host</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="leProxyHost">
+         <property name="placeholderText">
+          <string>Host name or IP</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Proxy Port</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="leProxyPort">
+         <property name="inputMask">
+          <string notr="true">00009</string>
+         </property>
+         <property name="placeholderText">
+          <string>Usually 3128</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Proxy User</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="leProxyUser">
+         <property name="placeholderText">
+          <string>Leave blank for anonymous access</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Proxy Password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="leProxyPassword">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+         <property name="placeholderText">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QDialogButtonBox" name="buttonBox">
+      <property name="standardButtons">
+       <set>QDialogButtonBox::Close|QDialogButtonBox::Reset|QDialogButtonBox::Save</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

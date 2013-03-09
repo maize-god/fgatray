@@ -2,10 +2,16 @@
 #include "ui_mainwindow.h"
 
 #include "defaults.h"
+#include "settings.h"
 
 #include <QCloseEvent>
 #include <QMenu>
 #include <QAction>
+
+struct ENUM_PAIR {
+    int id;
+    QString desc;
+};
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -17,7 +23,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_fgAdvice, SIGNAL(got(int)), SLOT(onAdviceReceived(int)));
 
     _Create_TrayIcon();
+    _InitControls();
     _LoadSettings();
+    _ApplySettings();
 
     m_canClose = false;
 }
@@ -68,11 +76,78 @@ void MainWindow::_Create_TrayIcon()
     m_trayIcon->show();
 }
 
+void MainWindow::_InitControls()
+{
+    const ENUM_PAIR _intervals[] = {
+        { 60, tr("Every minute") },
+        { 120, tr("Every two minutes") },
+        { 300, tr("Every five minutes") },
+        { 600, tr("Every ten minutes") },
+        { 900, tr("Every fifteen minutes") },
+        { 1200, tr("Every twenty minutes") },
+        { 1800, tr("Twice in a hour") },
+        { 3600, tr("Every hour") },
+        { 7200, tr("Every two hours") },
+        { 0, QString() }
+    };
+    const ENUM_PAIR* ep = _intervals;
+    while(ep->id != 0) {
+        ui->cmbAutoUpdateInterval->addItem(ep->desc, QVariant(ep->id));
+        ep++;
+    }
+}
+
 void MainWindow::_SaveSettings()
 {
+    Settings& s = Settings::instance();
+
+    s.context("General");
+    s.set("AutoUpdate", ui->cbAutoUpdate->isChecked());
+    {
+        int idx = ui->cmbAutoUpdateInterval->currentIndex();
+        s.set("AutoUpdateInterval",
+              (idx >= 0 ?
+                   ui->cmbAutoUpdateInterval->itemData(idx).toInt() :
+                   DEF_UPDATE_INTERVAL));
+    }
+
+    s.context("Proxy");
+    s.set("Use", ui->cbUseProxy->isChecked());
+    s.set("Host", ui->leProxyHost->text());
+    s.set("Port", ui->leProxyPort->text());
+    s.set("User", ui->leProxyUser->text());
+    s.set("Password", ui->leProxyPassword->text());
 }
 
 void MainWindow::_LoadSettings()
+{
+    Settings& s = Settings::instance();
+
+    s.context("General");
+    ui->cbAutoUpdate->setChecked(s.get("AutoUpdate", false));
+    {
+        int auint = s.get("AutoUpdateInterval", DEF_UPDATE_INTERVAL);
+        int idx = 0;
+        for(int i = 0; i < ui->cmbAutoUpdateInterval->count(); i++) {
+            if(ui->cmbAutoUpdateInterval->itemData(i).toInt() == auint) {
+                idx = i;
+                break;
+            }
+        }
+        ui->cmbAutoUpdateInterval->setCurrentIndex(idx);
+    }
+
+    s.context("Proxy");
+    ui->cbUseProxy->setChecked(s.get("Use", false));
+    ui->leProxyHost->setText(s.getString("Host"));
+    ui->leProxyPort->setText(s.getString("Port"));
+    ui->leProxyUser->setText(s.getString("User"));
+    ui->leProxyPassword->setText(s.getString("Password"));
+
+    s.context();
+}
+
+void MainWindow::_ApplySettings()
 {
 }
 
@@ -144,4 +219,17 @@ void MainWindow::onAdviceReceived(int state)
                     tr("ERROR"), m_fgAdvice->errorText(),
                     QSystemTrayIcon::Critical);
     }
+}
+
+void MainWindow::on_cbAutoUpdate_toggled(bool checked)
+{
+    ui->cmbAutoUpdateInterval->setEnabled(checked);
+}
+
+void MainWindow::on_cbUseProxy_toggled(bool checked)
+{
+    ui->leProxyHost->setEnabled(checked);
+    ui->leProxyPort->setEnabled(checked);
+    ui->leProxyUser->setEnabled(checked);
+    ui->leProxyPassword->setEnabled(checked);
 }

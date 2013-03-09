@@ -41,8 +41,10 @@ private:
     bool m_canClose;
 
     void _Create_TrayIcon();
+    void _InitControls();
     void _SaveSettings();
     void _LoadSettings();
+    void _ApplySettings();
 
 private slots:
     void onGetRandomAdvice();
