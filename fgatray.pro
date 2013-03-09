@@ -26,3 +26,5 @@ FORMS    += mainwindow.ui
 
 RESOURCES += \
     res.qrc
+
+TRANSLATIONS += fgatray.ru.ts
