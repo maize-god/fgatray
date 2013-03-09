@@ -105,7 +105,7 @@ void MainWindow::_SaveSettings()
 {
     Settings& s = Settings::instance();
 
-    s.context("General");
+    s.context(); // General
     s.set("AutoUpdate", ui->cbAutoUpdate->isChecked());
     {
         int idx = ui->cmbAutoUpdateInterval->currentIndex();
@@ -121,6 +121,8 @@ void MainWindow::_SaveSettings()
     s.set("Port", ui->leProxyPort->text());
     s.set("User", ui->leProxyUser->text());
     s.set("Password", ui->leProxyPassword->text());
+
+    s.context();
 }
 
 void MainWindow::_LoadSettings()
@@ -128,7 +130,7 @@ void MainWindow::_LoadSettings()
     Settings& s = Settings::instance();
 
     {
-        s.context("General");
+        s.context(); // General
         bool autoUpdate = s.get("AutoUpdate", false);
         ui->cbAutoUpdate->setChecked(autoUpdate);
         m_trayMenuPollServerToggleAction->setChecked(autoUpdate);
