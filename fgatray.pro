@@ -28,3 +28,5 @@ RESOURCES += \
     res.qrc
 
 TRANSLATIONS += fgatray.ru.ts
+
+RC_FILE = fgatray.rc
