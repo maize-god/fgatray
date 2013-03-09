@@ -48,11 +48,23 @@ bool FGAdvice::setProxy(
     if(m_state > Idle)
         return false;
 
-    m_proxyCreds.user = user;
-    m_proxyCreds.password = password;
+    m_proxyCreds.set(user, password);
 
     QNetworkProxy proxy(
                 QNetworkProxy::HttpProxy, host, port, user, password);
+    m_netAccMgr->setProxy(proxy);
+
+    return true;
+}
+
+bool FGAdvice::clearProxy()
+{
+    if(m_state > Idle)
+        return false;
+
+    m_proxyCreds.clear();
+
+    QNetworkProxy proxy;
     m_netAccMgr->setProxy(proxy);
 
     return true;

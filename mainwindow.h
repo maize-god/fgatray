@@ -9,6 +9,7 @@
 
 class QMenu;
 class QAction;
+class QTimer;
 
 namespace Ui {
 class MainWindow;
@@ -36,6 +37,8 @@ private:
 
     FGAdvice* m_fgAdvice;
 
+    QTimer* m_updateTimer;
+
     bool m_autoUpdate;
     int m_updateIntervalMillisec;
     bool m_canClose;
@@ -44,7 +47,7 @@ private:
     void _InitControls();
     void _SaveSettings();
     void _LoadSettings();
-    void _ApplySettings();
+    void _ApplySettings(bool startup = false);
 
 private slots:
     void onGetRandomAdvice();
@@ -54,6 +57,8 @@ private slots:
     void onExit();
     void onShow();
     void onAdviceReceived(int state);
+    void on_cbAutoUpdate_toggled(bool checked);
+    void on_cbUseProxy_toggled(bool checked);
 };
 
 #endif // MAINWINDOW_H

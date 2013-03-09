@@ -97,7 +97,17 @@ private:
     struct _ProxyCreds {
         QString user;
         QString password;
-    } m_poxyCreds;
+
+        void set(const QString& _user, const QString& _password) {
+            user = _user;
+            password = _password;
+        }
+
+        void clear() {
+            user = QString();
+            password = QString();
+        }
+    } m_proxyCreds;
 
     void _interpretResponse();
 
@@ -110,6 +120,7 @@ public:
             int port,
             const QString& user = QString(),
             const QString& password = QString());
+    bool clearProxy();
 
     const QString& text() const {
         return m_respData.text;

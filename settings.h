@@ -29,22 +29,14 @@ public:
         }
     }
 
-    template <typename T> get(const QString& key, T defValue);
-    template <typename T> set(const QString& key, T value) {
+    template <typename T> T get(const QString& key, T defValue);
+    template <typename T> void set(const QString& key, T value) {
         m_settings->setValue(key, QVariant(value));
     }
 
-    int getInt(const QString& key, int defValue = 0) {
-        return get<int>(key, defValue);
-    }
-
-    bool getBool(const QString& key, bool defValue = false) {
-        return get<bool>(key, defValue);
-    }
-
-    QString getString(const QString& key, QString defValue = QString()) {
-        return get<QString>(key, defValue);
-    }
+    int getInt(const QString& key, int defValue = 0);
+    bool getBool(const QString& key, bool defValue = false);
+    QString getString(const QString& key, QString defValue = QString());
 
     void context(const QString& ctx = QString());
 };

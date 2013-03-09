@@ -7,6 +7,7 @@
 #include <QCloseEvent>
 #include <QMenu>
 #include <QAction>
+#include <QTimer>
 
 struct ENUM_PAIR {
     int id;
@@ -22,10 +23,13 @@ MainWindow::MainWindow(QWidget *parent) :
     m_fgAdvice = new FGAdvice(this);
     connect(m_fgAdvice, SIGNAL(got(int)), SLOT(onAdviceReceived(int)));
 
+    m_updateTimer = new QTimer(this);
+    connect(m_updateTimer, SIGNAL(timeout()), SLOT(onGetRandomAdvice()));
+
     _Create_TrayIcon();
     _InitControls();
     _LoadSettings();
-    _ApplySettings();
+    _ApplySettings(true);
 
     m_canClose = false;
 }
@@ -123,9 +127,12 @@ void MainWindow::_LoadSettings()
 {
     Settings& s = Settings::instance();
 
-    s.context("General");
-    ui->cbAutoUpdate->setChecked(s.get("AutoUpdate", false));
     {
+        s.context("General");
+        bool autoUpdate = s.get("AutoUpdate", false);
+        ui->cbAutoUpdate->setChecked(autoUpdate);
+        m_trayMenuPollServerToggleAction->setChecked(autoUpdate);
+        on_cbAutoUpdate_toggled(autoUpdate);
         int auint = s.get("AutoUpdateInterval", DEF_UPDATE_INTERVAL);
         int idx = 0;
         for(int i = 0; i < ui->cmbAutoUpdateInterval->count(); i++) {
@@ -137,18 +144,46 @@ void MainWindow::_LoadSettings()
         ui->cmbAutoUpdateInterval->setCurrentIndex(idx);
     }
 
-    s.context("Proxy");
-    ui->cbUseProxy->setChecked(s.get("Use", false));
-    ui->leProxyHost->setText(s.getString("Host"));
-    ui->leProxyPort->setText(s.getString("Port"));
-    ui->leProxyUser->setText(s.getString("User"));
-    ui->leProxyPassword->setText(s.getString("Password"));
+    {
+        s.context("Proxy");
+        bool useProxy = s.get("Use", false);
+        ui->cbUseProxy->setChecked(useProxy);
+        on_cbUseProxy_toggled(useProxy);
+        ui->leProxyHost->setText(s.getString("Host"));
+        ui->leProxyPort->setText(s.getString("Port"));
+        ui->leProxyUser->setText(s.getString("User"));
+        ui->leProxyPassword->setText(s.getString("Password"));
+    }
 
     s.context();
 }
 
-void MainWindow::_ApplySettings()
+void MainWindow::_ApplySettings(bool startup)
 {
+    if(ui->cbUseProxy->isChecked()) {
+        m_fgAdvice->setProxy(
+                    ui->leProxyHost->text(),
+                    ui->leProxyPort->text().toInt(),
+                    ui->leProxyUser->text(),
+                    ui->leProxyPassword->text());
+    } else {
+        m_fgAdvice->clearProxy();
+    }
+
+    if(ui->cbAutoUpdate->isChecked()) {
+        if(startup) {
+            onGetRandomAdvice();
+        }
+
+        int interval = DEF_UPDATE_INTERVAL;
+        if(ui->cmbAutoUpdateInterval->currentIndex() >= 0)
+            interval = ui->cmbAutoUpdateInterval->itemData(
+                        ui->cmbAutoUpdateInterval->currentIndex()).toInt();
+        m_updateTimer->setInterval(1000 * interval);
+        m_updateTimer->start();
+    } else {
+        m_updateTimer->stop();
+    }
 }
 
 void MainWindow::onGetRandomAdvice()
@@ -163,6 +198,10 @@ void MainWindow::onGetRandomAdviceWithSound()
 
 void MainWindow::onTogglePollServer(bool poll)
 {
+    ui->cbAutoUpdate->setChecked(poll);
+    on_cbAutoUpdate_toggled(poll);
+    _SaveSettings();
+    _ApplySettings();
 }
 
 void MainWindow::onTrayActivate(QSystemTrayIcon::ActivationReason reason)
